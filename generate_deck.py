@@ -1,6 +1,7 @@
 import requests
 from retrieve_definition import retrieve_definition, open_search, text_wrangle
 from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
 
 
 """
@@ -48,21 +49,19 @@ pairwise similarity
 """
 
 
-def get_params_autogen(term):
-    """Sets the parameters for the API call for the initial user-entered term"""
+def get_params_links(term):
+    """API parameters for set of links on Wikipedia entry for term"""
     params = {
         "action": "parse",
         "prop": "links",
         "page": term,
         "format": "json",
     }
-    # Parameter set to query the Wikipedia page for a given term and retrieve up to 250 links to other articles -
-    # namespace 0 - from that page in JSON format.
     return params
 
 
 def get_params_size(search_string):
-    """Set parameters for API call that gets the article sizes for everything linked to the initial term article"""
+    """API parameters for the article lengths, watchers and visiting watchers for entered term(s)"""
     params = {
         "action": "query",
         "prop": "info",
@@ -70,16 +69,28 @@ def get_params_size(search_string):
         "titles": search_string,
         "format": "json",
     }
-    # Parameter set to query the Wikipedia pages for a list of terms and retrieve links from that page in JSON format.
+    return params
+
+def get_params_extract(search_string):
+    """API parameters for entire text of Wikipedia entry for term(s)."""
+    params = {
+        "action": "query",
+        "prop": "extracts",
+        "exlimit": 1,
+        "titles": search_string,
+        "explaintext": 1,
+        "formatversion": 2,
+        "format": "json"
+    }
     return params
 
 
-def autogenerate(term, deck_size):
+def generate_deck(term, deck_size):
     """Function to generate a set of extracts from a single user-entered term using the Wikipedia API"""
     S = requests.Session()
     # Accessing the MediaWiki Action API. What would the pros/cons be of switching to one of Wikipedia's other APIs?
     URL = "https://en.wikipedia.org/w/api.php"  # this is the base API URL for Wikipedia
-    params = get_params_autogen(term)
+    params = get_params_links(term)
     response = S.get(url=URL, params=params)
     data = response.json()
     # if the term does not match a Wikipedia entry, the open_search function runs and suggests a different term
@@ -87,7 +98,6 @@ def autogenerate(term, deck_size):
         return open_search(term)
     # getting the list of links from the JSON object returned from the API call
     links = data['parse']['links']
-    print(len(links))
     article_links = []
     # includes only titles that are namespace: 0 (articles only), exist,
     # and don't contain the listed exclusion phrases
@@ -99,8 +109,9 @@ def autogenerate(term, deck_size):
     if len(article_links) < 2:
         return open_search(term)
     # Get list of dictionaries
-    articles = batch_search(article_links)
+    articles = batch_search(article_links, attribute="size")
     # Flatten the list of dictionaries and sort by value[0]
+    # TODO: I bet there's a better way I could be getting this info where I wouldn't have to flatten the dict
     flat_dict = {}
     for my_dict in articles:
         for key in my_dict.keys():
@@ -112,34 +123,72 @@ def autogenerate(term, deck_size):
     p = 0
     article_titles = articles.keys()
     article_titles = list(article_titles)
-    while len(longest_articles) < int(deck_size)*5:
+    while (len(longest_articles) < int(deck_size)*5) and (len(longest_articles) < len(article_titles)):
         title = article_titles[p]
         longest_articles.append(title)
         p += 1
-        print(len(longest_articles))
-    cards = {}
+    # For each article title, pull the page contents from Wikipedia API
+    extracts = {term:get_article_extract(term)}
     for article in longest_articles:
-        definition = retrieve_definition(article)
-        cards.update({article: definition})
-
+        extract = get_article_extract(article)
+        extracts[article] = extract
+    # Perform TF-IDF comparisons
+    corpus = []
+    titles = []
+    for key in extracts:
+        titles.append(key)
+        corpus.append(extracts[key])
+    vect = TfidfVectorizer(min_df=1, stop_words="english")
+    tfidf = vect.fit_transform(corpus)
+    pairwise_similarity = tfidf * tfidf.T
+    arr = pairwise_similarity.toarray()
+    np.fill_diagonal(arr, np.nan)
+    root_similarity = arr[0]
+    # So we have our list of how similar each document is to the root document.
+    # Let's associate them with their article titles, and then sort by similarity.
+    similars = [(page, similarity) for page,similarity in zip(titles,root_similarity)]
+    similars.sort(key=lambda tup: tup[1], reverse=True)
+    for page in similars[:int(deck_size)]:
+        print(page)
+    import pdb; pdb.set_trace()
+    cards = {}
     S.close()
     return cards
 
 
-def batch_search(terms_list, batch_size=50):
+def batch_search(terms_list, batch_size=50, attribute=None):
     """Function to break longer sets of related terms into groups of 50, the max allowed by the Wikipedia API call"""
     articles = []
+    print(f"Total terms: {len(terms_list)}")
     if len(terms_list) > batch_size:
         while len(terms_list) > batch_size:
             print(f"{len(terms_list)} more articles to search...")
             search_string = get_search_string(terms_list, batch_size)
-            articles.append(get_article_size(search_string))
+            if attribute == "size":
+                articles.append(get_article_size(search_string))
+            else:
+                print("attribute not recognized!")
             terms_list = terms_list[batch_size:]
     if len(terms_list) < batch_size:
+        print(f"Last batch! {len(terms_list)} more articles to search...")
         search_string = get_search_string(terms_list, batch_size)
-        articles.append(get_article_size(search_string))
+        if attribute == "size":
+            articles.append(get_article_size(search_string))
+        else:
+            print("attribute not recognized!")
 
     return articles
+    
+def get_article_extract(article_title):
+    """Get Wikipedia extracts for all pages in search_string."""
+    print(f"retrieving extract for {article_title}")
+    S = requests.Session()
+    URL = "https://en.wikipedia.org/w/api.php"  # this is the base API URL for Wikipedia
+    params = get_params_extract(article_title)
+    response = S.get(url=URL, params=params)
+    data = response.json()
+    extract = data["query"]["pages"][0]["extract"]
+    return extract
 
 
 def get_article_size(search_string):
