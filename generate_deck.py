@@ -4,32 +4,19 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 from classes import ApiSession
 
-def get_params_extract(search_string):
-    """API parameters for entire text of Wikipedia entry for term(s)."""
-    params = {
-        "action": "query",
-        "prop": "extracts",
-        "exlimit": 1,
-        "titles": search_string,
-        "explaintext": 1,
-        "formatversion": 2,
-        "redirect": True,
-        "format": "json"
-    }
-    return params
-
-
 def generate_deck(S: ApiSession, term, deck_size):
     """Function to generate a set of extracts from a single user-entered term using the Wikipedia API"""
     deck_size = int(deck_size)
     article_links = S.get_links(term)
-    # Get list of dictionaries
     longest_articles = S.get_longest_articles(article_links, deck_size)
+
     # For each article title, pull the page contents from Wikipedia API
-    extracts = {term:get_article_extract(term)}
+    # I wonder if I need to land these in a dict, or if I can just land them directly into the corpus?
+    extracts = {term:S.get_article_extract(term)}
     for article in longest_articles:
-        extract = get_article_extract(article)
-        extracts[article] = extract
+        title = article[0]
+        extract = S.get_article_extract(title)
+        extracts[title] = extract
     # Perform TF-IDF comparisons
     corpus = []
     titles = []
@@ -50,17 +37,6 @@ def generate_deck(S: ApiSession, term, deck_size):
         print(page)
     cards = {}
     return cards
-    
-def get_article_extract(article_title):
-    """Get Wikipedia extracts for all pages in search_string."""
-    print(f"retrieving extract for {article_title}")
-    S = requests.Session()
-    URL = "https://en.wikipedia.org/w/api.php"  # this is the base API URL for Wikipedia
-    params = get_params_extract(article_title)
-    response = S.get(url=URL, params=params)
-    data = response.json()
-    extract = data["query"]["pages"][0]["extract"]
-    return extract
 
 if __name__ == "__main__":
     S = ApiSession()

@@ -139,7 +139,22 @@ class ApiSession():
         import pdb; pdb.set_trace()
         return longest_articles
 
-        
+    def get_article_extract(self, article_title):
+        print(f"Getting extract for {article_title}...")
+        params = {
+        "action": "query",
+        "prop": "extracts",
+        "exlimit": 1,
+        "titles": article_title,
+        "explaintext": 1,
+        "formatversion": 2,
+        "redirect": True,
+        "format": "json"
+        }
+        response = self.S.get(url=self.URL, params=params)
+        data = response.json()
+        extract = data["query"]["pages"][0]["extract"]
+        return extract
             
     def open_search(self, term):
         """
