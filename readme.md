@@ -5,6 +5,8 @@ Try different article comparison methods.
 Multiple topic inputs.
 - E.g. "New York City + history," "New York City + geography" 
 - This could boost relevance of returned pages.
+Clean Wikipedia extracts.
+- Examine what exactly TFIDFVectorizer is doing and remove confounding characters
 
 
 U:

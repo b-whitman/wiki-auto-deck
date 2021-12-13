@@ -76,6 +76,70 @@ class ApiSession():
 
         return article_title
 
+    def get_longest_articles(self, article_links, deck_size):
+        # U:
+        # This function is currently split between three different functions.
+        # It's confusing.
+        # All we want is when we input a list of wikipedia articles, we get back the lengths of those articles.
+        # P:
+        # First split the list of links into a list of strings of 50 terms each
+        # Then, for each string, perform the search through the API.
+        # Add the results to a list of tuples (title, byte size, watchers, visiting_watchers)
+        # Sort by length
+        # Consider implementing watcher count somehow when sorting -- 
+        #  ratio of visiting watchers to all watchers? Multiply length by number of watchers?
+
+        num_articles = deck_size*10
+        search_strings = []
+        while len(article_links) > 0:
+            search_string = ""
+            for title in article_links[:50]:
+                search_string = search_string + "|" + title
+            # Remove initial pipe
+            search_string = search_string[1:]
+            search_strings.append(search_string)
+            if len(article_links) > 50:
+                article_links = article_links[50:]
+            else:
+                break
+
+        articles_info = []
+        for s in search_strings:
+            params = {
+            "action": "query",
+            "prop": "info",
+            "inprop": "watchers|visitingwatchers",
+            "titles": s,
+            "redirect": True,
+            "format": "json",
+            }
+            response = self.S.get(url=self.URL, params=params)
+            data=response.json()
+            pages = data["query"]["pages"]
+            for page in pages.keys():
+                if page != "-1":
+                    # a -1 page_id means that the page does not exist
+                    title = pages[page]["title"]
+                    b_size = pages[page]["length"]
+                    if "watchers" in pages[page].keys():
+                        watchers = pages[page]["watchers"]
+                    else:
+                        watchers = None
+                    if "visitingwatchers" in pages[page].keys():
+                        visitingwatchers = pages[page]["visitingwatchers"]
+                    else:
+                        visitingwatchers = None
+                    articles_info.append((title, b_size, watchers, visitingwatchers))
+
+        articles_info.sort(key=lambda tup: tup[1], reverse=True)
+        if len(articles_info) > num_articles:
+            longest_articles = articles_info[:num_articles]
+        else:
+            longest_articles = articles_info
+        import pdb; pdb.set_trace()
+        return longest_articles
+
+        
             
     def open_search(self, term):
         """
