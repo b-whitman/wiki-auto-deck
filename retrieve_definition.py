@@ -115,22 +115,6 @@ def retrieve_definition(term, term_wrangled=False):
     return text
 
 
-def open_search(term):
-    """
-    function to use opensearch on Wikipedia API and return most likely related articles for a given term. opensearch
-    is a Wikimedia API feature which returns similarly-titled articles within the wiki.
-    """
-    # Does this need to be a function call? Couldn't we just have that code in this function? Seems like a gratuitous factorization
-    suggests = get_json_opensearch(term)
-
-    try:
-        return f"Did you mean {suggests[0]}, {suggests[1]}, {suggests[2]}?"
-
-    except IndexError:
-        # This covers cases where input doesn't have a close Wiki entry
-        return "We can't find anything close to that :("
-
-
 def text_wrangle(term):
     """
     Check text for various edge cases and remove
