@@ -1,10 +1,8 @@
-import requests
-from retrieve_definition import retrieve_definition, text_wrangle
 from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 from classes import ApiSession
 
-def generate_deck(S: ApiSession, term, deck_size):
+def generate_deck(S: ApiSession, term, deck_size, desc_length):
     """Function to generate a set of extracts from a single user-entered term using the Wikipedia API"""
     deck_size = int(deck_size)
     article_links = S.get_links(term)
@@ -33,9 +31,16 @@ def generate_deck(S: ApiSession, term, deck_size):
     # Let's associate them with their article titles, and then sort by similarity.
     similars = [(page, similarity) for page,similarity in zip(titles,root_similarity)]
     similars.sort(key=lambda tup: tup[1], reverse=True)
-    for page in similars[1:int(deck_size)+1]:
-        print(page)
     cards = {}
+    for page in similars[1:int(deck_size)+1]:
+        title = page[0]
+        if desc_length > 0:
+            description = extracts[title][:desc_length]
+        else: 
+            intro_end = extracts[title].find("\n\n\n")
+            description = extracts[title][:intro_end]
+        cards[title] = description
+    import pdb; pdb.set_trace()
     return cards
 
 if __name__ == "__main__":
@@ -46,6 +51,12 @@ if __name__ == "__main__":
         # Check to see if the term has a corresponding wiki article
         article_title = S.validate_term(term)
     deck_size = input("Enter number of cards to generate: ")
-    cards = generate_deck(S, article_title, deck_size)
+    print("This program can generate cards with long extracts or short.")
+    print("300 characters generally returns the first several sentences.")
+    print("Enter 0 if you want to return the entire introduction section.")
+    desc_length = int(input("Please enter the number of characters you'd like included in the extract: "))
+    while desc_length < 0:
+        desc_length = int(input("Please input a non-negative number: "))
+    cards = generate_deck(S, article_title, deck_size, desc_length)
     print(cards)
     S.close()

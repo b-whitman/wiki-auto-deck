@@ -4,7 +4,6 @@
 # It could then be the intermediary for all the interactions with the Wikipedia API involved in this program.
 
 import requests
-from sklearn.feature_extraction.text import TfidfVectorizer
 
 class ApiSession():
 
@@ -71,8 +70,9 @@ class ApiSession():
                 article_title = None
 
         else:
-            print(f"{term} matches a page on Wikipedia!")
-            article_title = term
+            article_title = pages[page_id[0]]["title"]
+            print(f"{term} matches the page {article_title} on Wikipedia!")
+            
 
         return article_title
 
@@ -136,7 +136,6 @@ class ApiSession():
             longest_articles = articles_info[:num_articles]
         else:
             longest_articles = articles_info
-        import pdb; pdb.set_trace()
         return longest_articles
 
     def get_article_extract(self, article_title):
