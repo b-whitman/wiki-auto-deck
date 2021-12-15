@@ -1,9 +1,5 @@
-# U:
-# I want to make a class for the connection to Wikipedia API.
-# At initialization, this would open a requests Session object.
-# It could then be the intermediary for all the interactions with the Wikipedia API involved in this program.
-
 import requests
+from tqdm import tqdm
 
 class ApiSession():
 
@@ -16,6 +12,10 @@ class ApiSession():
         self.S.close()
 
     def get_links(self, term):
+        """
+        Given a term matching a Wikipedia article, returns a list of all links 
+        in that article.
+        """
         params = {
         "action": "parse",
         "prop": "links",
@@ -40,10 +40,14 @@ class ApiSession():
         return article_links
 
     def validate_term(self, term):
-        # U:
-        # Right now the way the validated term is acquired and stored is sort of all over the place.
-        # If there is a wiki article with the given term as its title, continue on.
-        # But if there is no such article, prompt the user to choose one of the suggestions.
+        """
+        Given a term, search for a matching Wikipedia page. If one exists, or if 
+        Wikipedia redirects to a page when given that term, return the name of 
+        the Wiki article.
+        
+        If no matching page exists or is redirected to, perform a search of 
+        Wikipedia and allow the user to choose the best match for their intent.
+        """
         params = {
             "action": "query",
             "titles": term,
@@ -77,20 +81,23 @@ class ApiSession():
         return article_title
 
     def get_longest_articles(self, article_links, deck_size):
-        # U:
-        # This function is currently split between three different functions.
-        # It's confusing.
-        # All we want is when we input a list of wikipedia articles, we get back the lengths of those articles.
-        # P:
-        # First split the list of links into a list of strings of 50 terms each
-        # Then, for each string, perform the search through the API.
-        # Add the results to a list of tuples (title, byte size, watchers, visiting_watchers)
-        # Sort by length
-        # Consider implementing watcher count somehow when sorting -- 
-        #  ratio of visiting watchers to all watchers? Multiply length by number of watchers?
+        """
+        Gets lengths, watchers, and visiting watchers of all article links, to
+        rank pages by importance.
 
+        Currently article length is used as a direct proxy for importance, but 
+        one possible extension would be to incorporate information from watchers
+        and visiting watchers to make that a more robust measure.
+
+        (Watchers are Wikipedia users who have chosen to be notified when a 
+        given page is edited;
+        Visiting watchers are the watchers of a given page who have visited
+        recent edits to that page.)
+        """
         num_articles = deck_size*10
         search_strings = []
+        # Wikipedia API can query info from up to 50 pages at a time, so here we
+        # distribute our article titles into search strings of 50 titles each
         while len(article_links) > 0:
             search_string = ""
             for title in article_links[:50]:
@@ -104,7 +111,8 @@ class ApiSession():
                 break
 
         articles_info = []
-        for s in search_strings:
+        print("Pulling article lengths...")
+        for s in tqdm(search_strings):
             params = {
             "action": "query",
             "prop": "info",
@@ -116,6 +124,9 @@ class ApiSession():
             response = self.S.get(url=self.URL, params=params)
             data=response.json()
             pages = data["query"]["pages"]
+            # We'll get watchers and visiting watchers to potentially use in a 
+            # more robust page importance algorithm, but we don't actually use
+            # them yet.
             for page in pages.keys():
                 if page != "-1":
                     # a -1 page_id means that the page does not exist
@@ -139,7 +150,10 @@ class ApiSession():
         return longest_articles
 
     def get_article_extract(self, article_title):
-        print(f"Getting extract for {article_title}...")
+        """
+        Given the title of a Wikipedia article, returns the full text of the 
+        article.
+        """
         params = {
         "action": "query",
         "prop": "extracts",
