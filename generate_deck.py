@@ -47,12 +47,6 @@ def generate_deck(S: ApiSession, term, deck_size, desc_length):
         cards[title] = description
     return cards
 
-def output_to_json(cards):
-    """
-    Output cards as a JSON object of title: extract
-    """
-    pass
-
 if __name__ == "__main__":
     S = ApiSession()
     main_menu = True
