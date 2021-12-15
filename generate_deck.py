@@ -55,19 +55,29 @@ def output_to_json(cards):
 
 if __name__ == "__main__":
     S = ApiSession()
+    main_menu = True
     article_title = None
-    while article_title == None:
-        term = input("Enter page to scan: ")
+    cards = None
+    while main_menu:
+        term = input("Enter page to scan or type 'load file' to load an existing deck: ")
         # Check to see if the term has a corresponding wiki article
-        article_title = S.validate_term(term)
-    deck_size = input("Enter number of cards to generate: ")
-    print("This program can generate cards with long extracts or short.")
-    print("300 characters generally returns the first several sentences.")
-    print("Enter 0 if you want to return the entire introduction section.")
-    desc_length = int(input("Please enter the number of characters you'd like included in the extract: "))
-    while desc_length < 0:
-        desc_length = int(input("Please input a non-negative number: "))
-    cards = generate_deck(S, article_title, deck_size, desc_length)
+        if term == "load file":
+            filename = input("Enter filename of deck: ")
+            with open(filename, 'r') as f:
+                cards = json.load(f)
+            main_menu = False
+        else:
+            article_title = S.validate_term(term)
+            main_menu = False
+    if article_title:
+        deck_size = input("Enter number of cards to generate: ")
+        print("This program can generate cards with long extracts or short.")
+        print("300 characters generally returns the first several sentences.")
+        print("Enter 0 if you want to return the entire introduction section.")
+        desc_length = int(input("Please enter the number of characters you'd like included in the extract: "))
+        while desc_length < 0:
+            desc_length = int(input("Please input a non-negative number: "))
+        cards = generate_deck(S, article_title, deck_size, desc_length)
     print("Deck complete.")
     print("Enter 'cards' to view your cards one at a time, 'titles' to see a list of all your card titles, 'json' to output to JSON, or 'quit' to quit.")
     run = True
