@@ -2,6 +2,8 @@
 
 Scrapes pages related to a subject and, using TF-IDF as a similarity metric, creates a set of pages that are most similar.
 
+Adapted from work by Amer Mahyoub, Cai Nowicki, and myself during Lambda Labs. https://github.com/b-whitman/Studium-ds
+
 ## Long-term TODO:
 
 Display URL of wiki article with each card
