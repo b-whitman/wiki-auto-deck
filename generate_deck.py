@@ -37,10 +37,10 @@ def generate_deck(S: ApiSession, term, deck_size, desc_length):
     cards = {}
     for page in similars[1:int(deck_size)+1]:
         title = page[0]
-        if desc_length > 0:
+        intro_end = extracts[title].find("\n\n\n")
+        if desc_length > 0 and desc_length <= intro_end:
             description = extracts[title][:desc_length]
         else: 
-            intro_end = extracts[title].find("\n\n\n")
             description = extracts[title][:intro_end]
         cards[title] = description
     return cards
@@ -66,7 +66,6 @@ if __name__ == "__main__":
     while desc_length < 0:
         desc_length = int(input("Please input a non-negative number: "))
     cards = generate_deck(S, article_title, deck_size, desc_length)
-    import pdb; pdb.set_trace()
     print("Deck complete.")
     print("Enter 'cards' to view your cards one at a time, 'titles' to see a list of all your card titles, 'json' to output to JSON, or 'quit' to quit.")
     run = True
@@ -82,7 +81,7 @@ if __name__ == "__main__":
             print("Enter 'n' to view the next card, 'p' to view the previous card, 'r' to view a random card, or 'q' to return to the main menu.")
             while view_cards:
                 if command == 'n':
-                    if curr_card < len(titles):
+                    if curr_card < len(titles)-1:
                         curr_card += 1
                     else:
                         curr_card = 0
@@ -90,13 +89,30 @@ if __name__ == "__main__":
                     if curr_card > 0:
                         curr_card -= 1
                     else:
-                        curr_card = len(titles)
+                        curr_card = len(titles)-1
                 elif command == 'r':
                     curr_card = randint(0,len(titles)-1)
-                elif command == 'q':
-                    view_cards = False
+                else:
+                    print("Command not recognized.")
+                    print("Enter 'n' to view the next card, 'p' to view the previous card, 'r' to view a random card, or 'q' to return to the main menu.")
+                print(f"Current card index: {curr_card}")
                 curr_title = titles[curr_card]
                 print(curr_title)
                 print(cards[curr_title].replace("\n", "\n\n"))
                 command = input("> ").lower()
+                if command == 'q':
+                    view_cards = False
+                    print("Enter 'cards' to view your cards one at a time, 'titles' to see a list of all your card titles, 'json' to output to JSON, or 'quit' to quit.")
+        elif command == "titles":
+            print(list(cards.keys()))
+        elif command == "dev":
+            import pdb; pdb.set_trace()
+        elif command == "json":
+            print("Placeholder for conversion to json")
+        elif command == "quit":
+            run == False
+        else:
+            print("Command not recognized.")
+            print("Enter 'cards' to view your cards one at a time, 'titles' to see a list of all your card titles, 'json' to output to JSON, or 'quit' to quit.")
+
     S.close()
