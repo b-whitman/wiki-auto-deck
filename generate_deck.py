@@ -1,6 +1,8 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 from classes import ApiSession
+from tqdm import tqdm
+from random import randint
 
 def generate_deck(S: ApiSession, term, deck_size, desc_length):
     """Function to generate a set of extracts from a single user-entered term using the Wikipedia API"""
@@ -11,7 +13,8 @@ def generate_deck(S: ApiSession, term, deck_size, desc_length):
     # For each article title, pull the page contents from Wikipedia API
     # I wonder if I need to land these in a dict, or if I can just land them directly into the corpus?
     extracts = {term:S.get_article_extract(term)}
-    for article in longest_articles:
+    print("Pulling article extracts...")
+    for article in tqdm(longest_articles):
         title = article[0]
         extract = S.get_article_extract(title)
         extracts[title] = extract
@@ -21,7 +24,7 @@ def generate_deck(S: ApiSession, term, deck_size, desc_length):
     for key in extracts:
         titles.append(key)
         corpus.append(extracts[key])
-    vect = TfidfVectorizer(min_df=1, stop_words="english")
+    vect = TfidfVectorizer(stop_words="english", ngram_range=(1,3))
     tfidf = vect.fit_transform(corpus)
     pairwise_similarity = tfidf * tfidf.T
     arr = pairwise_similarity.toarray()
@@ -40,8 +43,13 @@ def generate_deck(S: ApiSession, term, deck_size, desc_length):
             intro_end = extracts[title].find("\n\n\n")
             description = extracts[title][:intro_end]
         cards[title] = description
-    import pdb; pdb.set_trace()
     return cards
+
+def output_to_json(cards):
+    """
+    Output cards as a JSON object of title: extract
+    """
+    pass
 
 if __name__ == "__main__":
     S = ApiSession()
@@ -58,5 +66,37 @@ if __name__ == "__main__":
     while desc_length < 0:
         desc_length = int(input("Please input a non-negative number: "))
     cards = generate_deck(S, article_title, deck_size, desc_length)
-    print(cards)
+    import pdb; pdb.set_trace()
+    print("Deck complete.")
+    print("Enter 'cards' to view your cards one at a time, 'titles' to see a list of all your card titles, 'json' to output to JSON, or 'quit' to quit.")
+    run = True
+    while run:
+        command = input("> ").lower()
+        if command == "quit":
+            run = False
+        elif command == "cards":
+            view_cards = True
+            curr_card = 0
+            titles = list(cards.keys())
+            command = None
+            print("Enter 'n' to view the next card, 'p' to view the previous card, 'r' to view a random card, or 'q' to return to the main menu.")
+            while view_cards:
+                if command == 'n':
+                    if curr_card < len(titles):
+                        curr_card += 1
+                    else:
+                        curr_card = 0
+                elif command == 'p':
+                    if curr_card > 0:
+                        curr_card -= 1
+                    else:
+                        curr_card = len(titles)
+                elif command == 'r':
+                    curr_card = randint(0,len(titles)-1)
+                elif command == 'q':
+                    view_cards = False
+                curr_title = titles[curr_card]
+                print(curr_title)
+                print(cards[curr_title].replace("\n", "\n\n"))
+                command = input("> ").lower()
     S.close()
