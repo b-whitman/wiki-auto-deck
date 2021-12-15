@@ -1,0 +1,39 @@
+backcall==0.2.0
+brotlipy==0.7.0
+certifi==2021.10.8
+cffi @ file:///C:/ci/cffi_1636523946399/work
+charset-normalizer @ file:///tmp/build/80754af9/charset-normalizer_1630003229654/work
+colorama==0.4.4
+cryptography @ file:///C:/ci/cryptography_1635366712888/work
+debugpy==1.3.0
+decorator==5.0.9
+idna @ file:///tmp/build/80754af9/idna_1637925883363/work
+inflect @ file:///C:/ci/inflect_1614797534456/work
+ipykernel==6.0.1
+ipython==7.25.0
+ipython-genutils==0.2.0
+jedi==0.18.0
+joblib @ file:///home/conda/feedstock_root/build_artifacts/joblib_1633637554808/work
+jupyter-client==6.1.12
+jupyter-core==4.7.1
+matplotlib-inline==0.1.2
+numpy @ file:///D:/bld/numpy_1636145505783/work
+parso==0.8.2
+pickleshare==0.7.5
+prompt-toolkit==3.0.19
+pycparser @ file:///tmp/build/80754af9/pycparser_1636541352034/work
+Pygments==2.9.0
+pyOpenSSL @ file:///tmp/build/80754af9/pyopenssl_1635333100036/work
+PySocks @ file:///C:/ci/pysocks_1605307512533/work
+pyzmq==22.1.0
+requests @ file:///tmp/build/80754af9/requests_1629994808627/work
+scikit-learn @ file:///D:/bld/scikit-learn_1636784191041/work
+scipy @ file:///C:/bld/scipy_1637807047976/work
+six @ file:///tmp/build/80754af9/six_1623709665295/work
+threadpoolctl @ file:///home/conda/feedstock_root/build_artifacts/threadpoolctl_1633102299089/work
+tqdm @ file:///tmp/build/80754af9/tqdm_1635330843403/work
+traitlets==5.0.5
+urllib3==1.26.7
+wcwidth==0.2.5
+win-inet-pton @ file:///C:/ci/win_inet_pton_1605306162074/work
+wincertstore==0.2

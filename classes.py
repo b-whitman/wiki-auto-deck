@@ -116,7 +116,7 @@ class ApiSession():
             params = {
             "action": "query",
             "prop": "info",
-            "inprop": "watchers|visitingwatchers",
+            "inprop": "watchers|visitingwatchers|url",
             "titles": s,
             "redirect": True,
             "format": "json",
@@ -132,6 +132,7 @@ class ApiSession():
                     # a -1 page_id means that the page does not exist
                     title = pages[page]["title"]
                     b_size = pages[page]["length"]
+                    url = pages[page]["fullurl"]
                     if "watchers" in pages[page].keys():
                         watchers = pages[page]["watchers"]
                     else:
@@ -140,7 +141,7 @@ class ApiSession():
                         visitingwatchers = pages[page]["visitingwatchers"]
                     else:
                         visitingwatchers = None
-                    articles_info.append((title, b_size, watchers, visitingwatchers))
+                    articles_info.append((title, b_size, watchers, visitingwatchers, url))
 
         articles_info.sort(key=lambda tup: tup[1], reverse=True)
         if len(articles_info) > num_articles:

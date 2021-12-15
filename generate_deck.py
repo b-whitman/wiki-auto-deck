@@ -3,6 +3,8 @@ import numpy as np
 from classes import ApiSession
 from tqdm import tqdm
 from random import randint
+import json
+import pdb
 
 def generate_deck(S: ApiSession, term, deck_size, desc_length):
     """Function to generate a set of extracts from a single user-entered term using the Wikipedia API"""
@@ -92,6 +94,8 @@ if __name__ == "__main__":
                         curr_card = len(titles)-1
                 elif command == 'r':
                     curr_card = randint(0,len(titles)-1)
+                elif command == 'dev':
+                    pdb.set_trace()
                 else:
                     print("Command not recognized.")
                     print("Enter 'n' to view the next card, 'p' to view the previous card, 'r' to view a random card, or 'q' to return to the main menu.")
@@ -106,9 +110,10 @@ if __name__ == "__main__":
         elif command == "titles":
             print(list(cards.keys()))
         elif command == "dev":
-            import pdb; pdb.set_trace()
+            pdb.set_trace()
         elif command == "json":
-            print("Placeholder for conversion to json")
+            with open('my_deck.json', 'w') as f:
+                json.dump(cards, f)
         elif command == "quit":
             run == False
         else:
