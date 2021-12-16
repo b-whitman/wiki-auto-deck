@@ -45,7 +45,7 @@ def generate_deck(S: ApiSession, term, deck_size, desc_length):
         else: 
             description = extracts[title][:intro_end]
         cards[title] = description
-    return cards
+    return cards, similars
 
 if __name__ == "__main__":
     S = ApiSession()
@@ -71,7 +71,7 @@ if __name__ == "__main__":
         desc_length = int(input("Please enter the number of characters you'd like included in the extract: "))
         while desc_length < 0:
             desc_length = int(input("Please input a non-negative number: "))
-        cards = generate_deck(S, article_title, deck_size, desc_length)
+        cards, similars = generate_deck(S, article_title, deck_size, desc_length)
     print("Deck complete.")
     print("Enter 'cards' to view your cards one at a time, 'titles' to see a list of all your card titles, 'json' to output to JSON, or 'quit' to quit.")
     run = True
